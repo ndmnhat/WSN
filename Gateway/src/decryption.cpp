@@ -4,6 +4,7 @@
 #include <AES.h>
 #include <CBC.h>
 #include "base64.hpp"
+#include <decryption.h>
 #include <secret.h>
 
 #define IV_SIZE 16

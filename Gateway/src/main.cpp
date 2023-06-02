@@ -9,6 +9,7 @@
 #include <WiFiUdp.h>
 #include <decryption.h>
 #include <secret.h>
+#include <rfc3339.h>
 
 String idToken = "";
 String error = "";
@@ -101,12 +102,19 @@ void postSensorsReading(uint8_t* rainVelo, uint8_t* rainVelo2, uint8_t* temp, ui
     DynamicJsonDocument doc(1024);
     char data[1024];
 
+    char nowStr[30];
+    struct date_time_struct now;
+    struct date_time_struct *nowPtr = &now;
+    _utcnow(nowPtr);
+    _format_date_time(nowPtr, nowStr);
+
     JsonObject object = doc.createNestedObject("fields");
     object.createNestedObject("rainVelo")["doubleValue"] = atof((char*)rainVelo);
     object.createNestedObject("rainVelo2")["doubleValue"] = atof((char*)rainVelo2);
     object.createNestedObject("temp")["doubleValue"] = atof((char*)temp);
     object.createNestedObject("humid")["doubleValue"] = atof((char*)humid);
     object.createNestedObject("vibration")["doubleValue"] = atof((char*)vibration);
+    object.createNestedObject("timestamp")["timestampValue"] = nowStr;
 
     serializeJson(doc, data);
     uint16_t docLength = measureJson(doc);
@@ -195,35 +203,6 @@ int iv_length(int base64len, int packetlen)
 {
     return packetlen - base64len;
 }
-
-// void onReceive(int packetSize)
-// {
-//     // received a packet
-//     Serial.print("Received packet: ");
-    
-//     // read packet
-//     while (LoRa.available()) {
-//         uint8_t sensorData[packetSize];
-//         LoRa.readBytes(sensorData, packetSize);
-//         printUint(sensorData, packetSize);
-        
-//         int base64len = base64_length(sensorData, packetSize);
-//         int ivlen = iv_length(base64len, packetSize);
-
-//         uint8_t iv[ivlen];
-//         uint8_t base64[base64len];
-
-//         memcpy(base64, sensorData, base64len);
-//         memcpy(iv, sensorData + (base64len +1), ivlen);
-
-//         int decryptedlen = decrypted_len(base64, base64len);
-//         uint8_t decrypted[decryptedlen];
-
-//         decrypt_to_base64(decrypted, base64, base64len, iv);
-
-//         readSensorData(decrypted, decryptedlen);
-//     }
-// }
 
 void initWiFi()
 {
